@@ -2,6 +2,7 @@ from data_collection_utils import download
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 import logging
+from logging.config import fileConfig
 import argparse
 import sox
 import pandas as pd
@@ -40,20 +41,20 @@ def combine_vctk_with_audioset(
               input_volumes)
 
 
-def read_segments_file(fname: Path):
+def read_segments_file(fname):
     dat = pd.read_csv(fname,
                       engine="python",
                       header=2,
                       skipinitialspace=True,
                       names=["ytid", "start", "end", "labels"])
-    return dat.set_index("ytid")
+    return dat
 
 
 def get_read_class_labels(fname: Path):
     download("http://storage.googleapis.com/us_audioset/youtube_corpus/v1/csv/class_labels_indices.csv",
              class_labels_path)
     label_map = pd.read_csv(class_labels_path)
-    return label_map.set_index("mid")
+    return label_map
 
 
 def get_labels(audioset: Path, segments: pd.DataFrame, label_map: pd.DataFrame):
@@ -70,16 +71,38 @@ def get_filename(labels: list, vctk_fname: Path, audioset_fname: Path):
     return Path(joined)
 
 
+def n_from_each_category(n, labels, segment_fnames):
+    category_files = []
+    for fname in segment_fnames:
+        logging.info(f"using segment file {fname}")
+        segs = read_segments_file(fname)
+        for idx, row in labels.iterrows():
+            logging.info(f"gathering ytids for category {row['display_name']}")
+            ytids = []
+            for idx2, aud_clip in segs.iterrows():
+                if row["mid"] in aud_clip["labels"]:
+                    ytids.append(aud_clip["ytid"])
+                    segs.drop(idx2, inplace=True)
+                if len(ytids) == n:
+                    break
+            if not len(ytids) == n:
+                logging.info(f"could not find {n} entries for category {row['display_name']}")
+            category_files.append(ytids)
+
+
 if __name__ == "__main__":
     args = parser.parse_args()
-    logging.basicConfig(format=logging.BASIC_FORMAT, level=args.log_level)
+    try:
+        fileConfig("logging.conf")
+    except:
+        pass
     info = logging.info
     debug = logging.debug
 
     data_dir = Path(args.data_dir_path)
     audioset_root = data_dir / Path("AUDIOSET")
     vctk_root = data_dir / Path("VCTK-Corpus")
-    output_root = data_dir / Path("output")
+    output_root = data_dir / Path("output") / Path("audioset")
 
     if not output_root.exists():
         output_root.mkdir()
@@ -88,10 +111,16 @@ if __name__ == "__main__":
     vctk_files = [Path(x) for x in (data_dir / Path("VCTK-Corpus/wav48")).glob("**/*.wav")]
 
     class_labels_path = audioset_root / Path("class_labels_indices.csv")
-    label_map = get_read_class_labels(class_labels_path)
+    class_labels = get_read_class_labels(class_labels_path)
 
     segments = read_segments_file(audioset_root / Path("eval_segments.csv"))
 
+    eval_segments_path = audioset_root / Path("eval_segments.csv")
+
+    cat_files = n_from_each_category(5, class_labels, [eval_segments_path])
+    info(cat_files)
+
+    """
     with ThreadPoolExecutor() as pool:
         info("Beginning processing")
         for vctk_fname in vctk_files:
@@ -103,16 +132,4 @@ if __name__ == "__main__":
                             audioset_fname,
                             output_root / fname)
         info("Processing complete")
-
-    """
-    In [25]: category_files = []
-    ...: for idx, row in class_labels.iterrows():
-    ...:     ytids = []
-    ...:     for idx2, segment in segments.iterrows():
-    ...:         if row["mid"] in segment["labels"]:
-    ...:             ytids.append(segment["ytid"])
-    ...:         if len(ytids) == 10:
-    ...:             break
-    ...:     category_files.append(ytids)
-    ...:
     """

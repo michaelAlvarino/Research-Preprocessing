@@ -4,6 +4,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 import numpy as np
 import logging
+from logging.config import fileConfig
 
 
 def make_noisy(path, intensity, output_dir):
@@ -20,16 +21,19 @@ def make_noisy(path, intensity, output_dir):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(
-            format=logging.BASIC_FORMAT,
-            level="INFO"
-            )
+    try:
+        fileConfig("logging.conf")
+    except:
+        pass
     info = logging.info
     debug = logging.debug
 
     data_dir = Path("data")
     vctk_root = data_dir / Path("VCTK-Corpus")
-    output_root = data_dir / Path("output")
+    output_root = data_dir / Path("output") / Path("gaussian_noise")
+
+    if not output_root.exists():
+        output_root.mkdir()
 
     vctk_files = list(map(Path, vctk_root.glob("**/*.wav")))
 
@@ -44,4 +48,3 @@ if __name__ == "__main__":
                         )
             if i % 1000 == 0:
                 info(f"processed {i} files, next is {vctk_files[i + 1]}")
-            break
