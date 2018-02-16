@@ -9,7 +9,7 @@ if __name__ == "__main__":
     try:
         fileConfig("logging.conf")
     except:
-        pass
+        logging.basicConfig(format=logging.BASIC_FORMAT, level="INFO")
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--audioset_root")
@@ -24,7 +24,11 @@ if __name__ == "__main__":
 
     files = map(Path, audioset_root.glob("**/*.flac"))
 
+    i = 0
     for file in files:
+        i += 1
         trf = sox.Transformer()
         output_fname = str(output_dir / Path(file.stem)) + ".wav"
         trf.build(str(file), output_fname)
+        if i % 10000 == 0:
+            logging.info("processed {} files".format(i))
