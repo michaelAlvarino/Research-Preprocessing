@@ -1,8 +1,8 @@
 from logging.config import fileConfig
 from pathlib import Path
 import logging
-import sox
 import argparse
+import subprocess as sp
 
 
 if __name__ == "__main__":
@@ -24,11 +24,14 @@ if __name__ == "__main__":
 
     files = map(Path, audioset_root.glob("**/*.flac"))
 
+    ffmpegpath = Path("/rigel/home/maa2282/Research-Preprocessing/ffmpeg")
+
     i = 0
+    logging.info("starting...")
     for file in files:
         i += 1
-        trf = sox.Transformer()
         output_fname = str(output_dir / Path(file.stem)) + ".wav"
-        trf.build(str(file), output_fname)
+        if not Path(output_fname).exists() and not Path(output_fname).stem == "2H4PqZ5BQKg_30000_40000":
+            sp.run([str(ffmpegpath), "-i", str(file), output_fname, "-y", "-loglevel", "quiet"])
         if i % 10000 == 0:
             logging.info("processed {} files".format(i))
