@@ -1,6 +1,5 @@
 from data_collection_utils import download, extract_zip
 from pathlib import Path
-from concurrent.futures import ThreadPoolExecutor, Future
 import argparse
 import logging
 
@@ -26,25 +25,14 @@ def download_demand_zips(subjects, demand_dir):
         demand_dir.mkdir()
     urls = map("http://parole.loria.fr/DEMAND/{}_48k.zip".format, subjects)
     destinations = map("{}_48k.zip".format, subjects)
-    with ThreadPoolExecutor(max_workers=len(subjects)) as executor:
-        futures = []
-        for url, fname in zip(urls, destinations):
-            future = executor.submit(download, url, demand_dir / Path(fname))
-            futures.append(future)
-        results = list(map(lambda fut: fut.exception(), futures))
-        for result in results:
-            if result is not None:
-                logging.error(f"exception {result}")
+    for url, fname in zip(urls, destinations):
+        download(url, demand_dir / Path(fname))
 
 
 def extract_demand_zips(subjects, demand_dir):
     zips = list(map(lambda fname: demand_dir / Path(f"{fname}_48k.zip"), subjects))
-    with ThreadPoolExecutor(max_workers=len(zips)) as executor:
-        futures = [executor.submit(extract_zip, zipf, demand_dir) for zipf in zips]
-    results = list(map(lambda fut: fut.exception(), futures))
-    for result in results:
-        if result is not None:
-            logging.error(f"exception {result}")
+    for zipf in zips:
+        extract_zip(zipf, demand_dir)
 
 
 if __name__ == "__main__":
