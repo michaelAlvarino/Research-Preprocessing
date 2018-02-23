@@ -74,13 +74,13 @@ def mix_for_each_vctk_entry(vctk_clips, audioset, noise_category, output_root):
     for vctk in vctk_clips:
         vctk_rate, vctk_data = read(vctk)
         sample, start, end = n_random_continous_samples(vctk_data.shape[0], audioset_data)
-        fname = output_root / Path(f"{vctk.stem}_{noise_category}_{audioset.stem}.wav")
+        fname = output_root / Path("{}_{}_{}.wav".format(vctk.stem, noise_category, audioset.stem))
         combine_google_vctk(sample, vctk_data, vctk_rate, fname)
         break
 
 
 def ytid_to_exact_filepath(ytid, audioset_wav_root):
-    return Path(list(audioset_wav_root.glob(f"**/*{ytid}*.wav"))[0])
+    return Path(list(audioset_wav_root.glob("**/*{}*.wav".format(ytid)))[0])
 
 
 if __name__ == "__main__":
@@ -111,7 +111,7 @@ if __name__ == "__main__":
 
     # go through each audio category
     for _, category in categories.iterrows():
-        logging.info(f"matching category {category['display_name']}")
+        logging.info("matching category {}".format(category['display_name']))
         cat_code = category["mid"]
         # until we find n_vids videos that were successfully downloaded, or have gone through all the videos
         n = 0
@@ -123,7 +123,7 @@ if __name__ == "__main__":
                     audioset_entry_path = ytid_to_exact_filepath(ytid, audioset_wav_root)
                 except IndexError:
                     # ytid would have qualified but we failed to download or convert it to wav
-                    logging.info(f"youtube audio clip for {ytid} is a match, but file is missing")
+                    logging.info("youtube audio clip for {} is a match, but file is missing".format(ytid))
                     continue
                 mix_for_each_vctk_entry(vctk_wavs, audioset_entry_path, category["display_name"], output_root)
                 file_category_mapping.drop(_, inplace=True)
