@@ -24,7 +24,7 @@ def make_noisy(path, intensity, output_dir):
                     size=data.shape)
             noisy = np.vstack((data, noise)).T
             output_f = "{}_intensity_{}_gaussian_{}_{}.wav".format(path.stem, intensity, mean, std)
-            write(str(output_dir / Path(output_f), rate, noisy))
+            write(str(output_dir / Path(output_f)), rate, noisy)
 
 
 if __name__ == "__main__":
