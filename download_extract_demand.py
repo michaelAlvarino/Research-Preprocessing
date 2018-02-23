@@ -8,11 +8,7 @@ parser = argparse.ArgumentParser(description="Downloads the VCTK corpus if it do
         "being run from the parent directory to `preprocessing` where it will create a data directory and do" +
         "all of the download and extracting work")
 
-parser.add_argument("--url",
-                    help="url to tar gzip'd data path, ex: " +
-                    "http://homepages.inf.ed.ac.uk/jyamagis/release/VCTK-Corpus.tar.gz",
-                    default="http://homepages.inf.ed.ac.uk/jyamagis/release/VCTK-Corpus.tar.gz")
-parser.add_argument("--data_dir_path",
+parser.add_argument("--demand_dir",
                     help="path to data directory, will be created if non-existent, ex: data",
                     default="data")
 parser.add_argument("--log_level",
@@ -30,7 +26,7 @@ def download_demand_zips(subjects, demand_dir):
 
 
 def extract_demand_zips(subjects, demand_dir):
-    zips = list(map(lambda fname: demand_dir / Path(f"{fname}_48k.zip"), subjects))
+    zips = list(map(lambda fname: demand_dir / Path("{}_48k.zip".format(fname)), subjects))
     for zipf in zips:
         extract_zip(zipf, demand_dir)
 
@@ -38,8 +34,9 @@ def extract_demand_zips(subjects, demand_dir):
 if __name__ == "__main__":
     args = parser.parse_args()
     logging.basicConfig(format=logging.BASIC_FORMAT, level=args.log_level)
-    data_dir = Path(args.data_dir_path)
-    demand_dir = data_dir / Path("DEMAND")
+    demand_dir = Path(args.demand_dir)
+    if not demand_dir.exists():
+        demand_dir.mkdir()
     subjects = ["DWASHING", "DKITCHEN", "DLIVING", "NFIELD",
                 "NPARK", "NRIVER", "OOFFICE", "OHALLWAY",
                 "OMEETING", "PSTATION", "PCAFETER", "PRESTO",
