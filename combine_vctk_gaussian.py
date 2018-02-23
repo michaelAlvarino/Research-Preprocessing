@@ -2,9 +2,17 @@ from pathlib import Path
 from scipy.io.wavfile import read, write
 from concurrent.futures import ThreadPoolExecutor
 
+import argparse
 import numpy as np
 import logging
 from logging.config import fileConfig
+
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("VCTK_DIR")
+    parser.add_argument("OUTPUT_DIR")
+    return parser.parse_args()
 
 
 def make_noisy(path, intensity, output_dir):
@@ -23,14 +31,11 @@ def make_noisy(path, intensity, output_dir):
 if __name__ == "__main__":
     try:
         fileConfig("logging.conf")
-    except:
-        pass
-    info = logging.info
-    debug = logging.debug
-
-    data_dir = Path("data")
-    vctk_root = data_dir / Path("VCTK-Corpus")
-    output_root = data_dir / Path("output") / Path("gaussian_noise")
+    except Exception:
+        logging.basicConfig(format=logging.BASIC_FORMAT, level="INFO")
+    args = parse_args()
+    vctk_root = Path(args.VCTK_DIR)
+    output_root = Path(args.OUTPUT_DIR)
 
     if not output_root.exists():
         output_root.mkdir()
@@ -47,4 +52,4 @@ if __name__ == "__main__":
                         output_root
                         )
             if i % 1000 == 0:
-                info(f"processed {i} files, next is {vctk_files[i + 1]}")
+                logging.info(f"processed {i} files, next is {vctk_files[i + 1]}")
