@@ -24,7 +24,7 @@ def make_noisy(path, intensity, output_dir):
                     scale=std,
                     size=data.shape)
             noisy = np.vstack((data, noise)).T
-            output_f = f"{path.stem}_intensity_{intensity}_gaussian_{mean}_{std}.wav"
+            output_f = "{}_intensity_{}_gaussian_{}_{}.wav".format(path.stem, intensity, mean, std)
             write(output_dir / Path(output_f), rate, noisy)
 
 
@@ -52,4 +52,4 @@ if __name__ == "__main__":
                         output_root
                         )
             if i % 1000 == 0:
-                logging.info(f"processed {i} files, next is {vctk_files[i + 1]}")
+                logging.info("processed {} files, next is {}".format(i, vctk_files[i + 1]))
