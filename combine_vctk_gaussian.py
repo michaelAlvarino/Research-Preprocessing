@@ -15,7 +15,7 @@ def parse_args():
 
 
 def make_noisy(path, intensity, output_dir):
-            rate, data = read(path)
+            rate, data = read(str(path))
             std = np.std(data) * intensity
             mean = np.mean(data) * intensity - std
             noise = np.random.normal(
@@ -24,7 +24,7 @@ def make_noisy(path, intensity, output_dir):
                     size=data.shape)
             noisy = np.vstack((data, noise)).T
             output_f = "{}_intensity_{}_gaussian_{}_{}.wav".format(path.stem, intensity, mean, std)
-            write(output_dir / Path(output_f), rate, noisy)
+            write(str(output_dir / Path(output_f), rate, noisy))
 
 
 if __name__ == "__main__":
