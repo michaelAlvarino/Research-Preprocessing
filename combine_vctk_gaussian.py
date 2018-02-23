@@ -1,6 +1,5 @@
 from pathlib import Path
 from scipy.io.wavfile import read, write
-from concurrent.futures import ThreadPoolExecutor
 
 import argparse
 import numpy as np
@@ -42,14 +41,12 @@ if __name__ == "__main__":
 
     vctk_files = list(map(Path, vctk_root.glob("**/*.wav")))
 
-    with ThreadPoolExecutor() as pool:
-        for i, path in enumerate(vctk_files):
-            for intensity in range(10):
-                pool.submit(
-                        make_noisy,
+    for i, path in enumerate(vctk_files):
+        for intensity in range(10):
+                    make_noisy(
                         path,
                         10 ** -intensity,
                         output_root
-                        )
-            if i % 1000 == 0:
-                logging.info("processed {} files, next is {}".format(i, vctk_files[i + 1]))
+                    )
+        if i % 1000 == 0:
+            logging.info("processed {} files, next is {}".format(i, vctk_files[i + 1]))
